@@ -1,0 +1,2 @@
+Hello {{ name | safe }}
+Message: {{ message | safe }}

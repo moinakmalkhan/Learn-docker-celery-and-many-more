@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  # Database
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    container_name: celery_project_postgres_db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+  
+  # Redis
+  redis:
+    image: redis:alpine
+    container_name: redis
+
+  # Celery
+  celery:
+    restart: always
+    build:
+      context: .
+    command: celery -A celery_project worker -l info
+    volumes:
+      - .:/app
+    container_name: celery_project_celery_container
+    depends_on:
+      - db
+      - redis
+      - celery_app
+
+  # Django application
+  celery_app:
+    build: .
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    image: celery_app
+    container_name: celery_project_app_container
+    command: python3 manage.py runserver 0.0.0.0:8000
+    depends_on:
+      - db
